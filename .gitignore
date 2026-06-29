@@ -75,3 +75,17 @@ htmlcov/
 build/
 dist/
 *.egg-info/
+
+
+.env
+.env.local
+venv/
+.venv/
+data/raw/*
+data/processed/*
+logs/*
+*.csv
+*.xlsx
+*.xls
+*.dump
+*.backup
