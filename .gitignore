@@ -1,0 +1,77 @@
+# =========================
+# Python
+# =========================
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Environnement virtuel
+venv/
+.venv/
+env/
+ENV/
+
+# Fichiers de configuration locale
+.env
+.env.local
+
+# =========================
+# PostgreSQL / Base de données
+# =========================
+*.dump
+*.backup
+*.sql.backup
+
+# =========================
+# Données importées
+# =========================
+# On ne versionne pas les gros fichiers CSV/Excel téléchargés
+data/raw/*
+data/processed/*
+
+# Mais on garde les dossiers dans Git
+!data/raw/.gitkeep
+!data/processed/.gitkeep
+
+# Fichiers Football-Data / FBref
+*.csv
+*.xlsx
+*.xls
+
+# =========================
+# Logs
+# =========================
+logs/*
+*.log
+!logs/.gitkeep
+
+# =========================
+# Jupyter Notebook
+# =========================
+.ipynb_checkpoints/
+
+# =========================
+# IDE / Éditeurs
+# =========================
+.vscode/
+.idea/
+
+# =========================
+# Système
+# =========================
+.DS_Store
+Thumbs.db
+
+# =========================
+# Tests / Cache
+# =========================
+.pytest_cache/
+.coverage
+htmlcov/
+
+# =========================
+# Build / Package
+# =========================
+build/
+dist/
+*.egg-info/
