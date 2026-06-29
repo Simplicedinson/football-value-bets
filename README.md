@@ -1,25 +1,25 @@
 # Football Value Bets
 
-Logiciel d'analyse statistique football pour détecter des value bets.
+Football statistical analysis software designed to detect value betting opportunities.
 
-## Objectif
+## Objective
 
-Comparer les probabilités calculées par notre modèle avec les cotes proposées par les bookmakers.
+Compare the probabilities calculated by our model with the odds offered by bookmakers.
 
-## Marchés ciblés
+## Target Markets
 
 - 1X2
 - Double Chance
 - Over / Under 2.5
-- Buteurs
+- Anytime Scorer
 
-## Championnats ciblés
+## Target Leagues
 
-- Championship anglaise
-- Ligue 2 française
-- Autres deuxièmes divisions européennes
+- English Championship
+- French Ligue 2
+- Other European second divisions
 
-## Stack technique
+## Tech Stack
 
 - Python
 - PostgreSQL
@@ -28,13 +28,13 @@ Comparer les probabilités calculées par notre modèle avec les cotes proposée
 - Football-Data
 - FBref
 
-## Structure du projet
+## Project Structure
 
 ```text
-app/              Code Python principal
-sql/              Scripts SQL PostgreSQL
-data/raw/         Données brutes non versionnées
-data/processed/   Données nettoyées non versionnées
-notebooks/        Tests et analyses exploratoires
-tests/            Tests unitaires
-logs/             Logs d'import
+app/              Main Python application code
+sql/              PostgreSQL SQL scripts
+data/raw/         Raw non-versioned data
+data/processed/   Cleaned non-versioned data
+notebooks/        Exploratory analysis and tests
+tests/            Unit tests
+logs/             Import logs
