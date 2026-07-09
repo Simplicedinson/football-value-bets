@@ -1,0 +1,17 @@
+.header-badge {
+    background: var(--accent-soft);
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    padding: 10px 16px;
+    border-radius: 999px;
+    font-weight: 700;
+}
+
+.highlight {
+    color: var(--accent);
+    font-weight: 800;
+}
+
+.muted {
+    color: var(--muted);
+}

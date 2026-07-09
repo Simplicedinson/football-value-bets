@@ -43,7 +43,7 @@ PREFERRED_BOOKMAKER = "Bet365.de"
 
 # For quick tests, keep 3.
 # Set to None when you want to scrape all matches.
-MAX_MATCHES_TO_SCRAPE_ODDS: Optional[int] = 3
+MAX_MATCHES_TO_SCRAPE_ODDS: Optional[int] = None
 
 REQUEST_DELAY_SECONDS = 1.5
 

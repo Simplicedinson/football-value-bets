@@ -1,0 +1,186 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+{% if not fixture %}
+
+<section class="page-header">
+    <div>
+        <h1>Match not found</h1>
+        <p>No fixture found with this ID.</p>
+    </div>
+</section>
+
+<a class="view-link" href="/matches/today">Back to today's matches</a>
+
+{% else %}
+
+<section class="page-header">
+    <div>
+        <h1>{{ fixture.home_team }} vs {{ fixture.away_team }}</h1>
+        <p>
+            {{ fixture.league_name }} |
+            {{ fixture.match_date }} |
+            {{ fixture.kickoff_time }}
+        </p>
+    </div>
+
+    <a class="sort-chip" href="/matches/today">Back</a>
+</section>
+
+<div class="match-detail-layout">
+
+    <section class="detail-grid">
+
+        <div class="detail-card">
+            <h2>1X2</h2>
+
+            {% if markets["1x2"] %}
+                {% for period_key, period in markets["1x2"].items() %}
+                    <div class="market-block">
+                        <h3>{{ period_key }}</h3>
+                        <p class="muted">Bookmaker: {{ period["bookmaker"] }}</p>
+
+                        <div class="odds-grid">
+                            <div class="odds-box">
+                                <span>1</span>
+                                <strong>
+                                    {% if period["values"].get("home_win") %}
+                                        {{ "%.2f"|format(period["values"]["home_win"]) }}
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                </strong>
+                            </div>
+
+                            <div class="odds-box">
+                                <span>X</span>
+                                <strong>
+                                    {% if period["values"].get("draw") %}
+                                        {{ "%.2f"|format(period["values"]["draw"]) }}
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                </strong>
+                            </div>
+
+                            <div class="odds-box">
+                                <span>2</span>
+                                <strong>
+                                    {% if period["values"].get("away_win") %}
+                                        {{ "%.2f"|format(period["values"]["away_win"]) }}
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                </strong>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <p class="muted">No 1X2 odds available.</p>
+            {% endif %}
+        </div>
+
+        <div class="detail-card">
+            <h2>Both Teams To Score</h2>
+
+            {% if markets["both_teams_to_score"] %}
+                {% for period_key, period in markets["both_teams_to_score"].items() %}
+                    <div class="market-block">
+                        <h3>{{ period_key }}</h3>
+                        <p class="muted">Bookmaker: {{ period["bookmaker"] }}</p>
+
+                        <div class="odds-grid two-columns">
+                            <div class="odds-box">
+                                <span>Yes</span>
+                                <strong>
+                                    {% if period["values"].get("yes") %}
+                                        {{ "%.2f"|format(period["values"]["yes"]) }}
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                </strong>
+                            </div>
+
+                            <div class="odds-box">
+                                <span>No</span>
+                                <strong>
+                                    {% if period["values"].get("no") %}
+                                        {{ "%.2f"|format(period["values"]["no"]) }}
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                </strong>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <p class="muted">No BTTS odds available.</p>
+            {% endif %}
+        </div>
+
+    </section>
+
+    <section class="card detail-section">
+        <h2>Over / Under</h2>
+
+        {% if markets["over_under"] %}
+            {% for period_key, lines in markets["over_under"].items() %}
+                <div class="market-block">
+                    <h3 class="period-title">{{ period_key }}</h3>
+
+                    <table class="matches-table">
+                        <thead>
+                            <tr>
+                                <th>Line</th>
+                                <th class="odd-cell">Over</th>
+                                <th class="odd-cell">Under</th>
+                            </tr>
+                        </thead>
+
+                        <tbody>
+                            {% for row in lines %}
+                                <tr>
+                                    <td>Over/Under {{ "%.2f"|format(row["line"]) }}</td>
+
+                                    <td class="odd-cell">
+                                        {% if row["values"].get("over") %}
+                                            {{ "%.2f"|format(row["values"]["over"]) }}
+                                        {% else %}
+                                            -
+                                        {% endif %}
+                                    </td>
+
+                                    <td class="odd-cell">
+                                        {% if row["values"].get("under") %}
+                                            {{ "%.2f"|format(row["values"]["under"]) }}
+                                        {% else %}
+                                            -
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% endfor %}
+        {% else %}
+            <p class="muted">No Over/Under odds available.</p>
+        {% endif %}
+    </section>
+
+    <section class="card detail-section">
+        <h2>Analysis Area</h2>
+        <p class="muted">
+            Later we will add team form, xG estimation, recent shots, shots on target,
+            value bet signals and final betting recommendations here.
+        </p>
+    </section>
+
+</div>
+
+{% endif %}
+
+{% endblock %}

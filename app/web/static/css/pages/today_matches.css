@@ -1,0 +1,12 @@
+.today-matches-page { width: 100%; }
+
+.matches-table td:nth-child(5),
+.matches-table td:nth-child(6),
+.matches-table td:nth-child(7),
+.matches-table td:nth-child(8) {
+    font-weight: 850;
+}
+
+.matches-table td:nth-child(8) {
+    font-size: 16px;
+}

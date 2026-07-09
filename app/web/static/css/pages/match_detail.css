@@ -1,0 +1,104 @@
+.match-detail-layout {
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+}
+
+.detail-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 22px;
+}
+
+.detail-card h2,
+.detail-section h2 {
+    margin: 0 0 20px 0;
+    font-size: 28px;
+    font-weight: 950;
+    letter-spacing: -0.04em;
+}
+
+.market-block {
+    margin-bottom: 26px;
+}
+
+.market-block h3,
+.period-title {
+    margin: 0 0 12px 0;
+    color: var(--accent-2);
+    text-transform: capitalize;
+    font-size: 18px;
+    font-weight: 950;
+    text-shadow: 0 0 18px rgba(34, 197, 94, 0.26);
+}
+
+.odds-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 14px;
+}
+
+.odds-grid.two-columns {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.odds-box {
+    position: relative;
+    background: linear-gradient(180deg, rgba(2, 6, 23, 0.96), rgba(15, 23, 42, 0.88));
+    border: 1px solid rgba(148, 163, 184, 0.20);
+    border-radius: var(--radius-lg);
+    padding: 16px;
+    overflow: hidden;
+    transition: 180ms ease;
+}
+
+.odds-box::after {
+    content: "";
+    position: absolute;
+    right: -26px;
+    top: -26px;
+    width: 70px;
+    height: 70px;
+    border-radius: 999px;
+    background: rgba(34, 197, 94, 0.12);
+    filter: blur(4px);
+}
+
+.odds-box:hover {
+    border-color: var(--border-strong);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-glow);
+}
+
+.odds-box span {
+    display: block;
+    color: var(--muted);
+    font-size: 13px;
+    margin-bottom: 10px;
+    font-weight: 800;
+}
+
+.odds-box strong {
+    color: var(--accent-2);
+    font-size: 28px;
+    font-weight: 950;
+    letter-spacing: -0.04em;
+}
+
+.detail-section .matches-table td:nth-child(2) {
+    font-size: 16px;
+    font-weight: 900;
+    color: var(--accent-2);
+}
+
+.detail-section .matches-table td:nth-child(3) {
+    font-size: 16px;
+    font-weight: 900;
+    color: #93c5fd;
+}
+
+@media (max-width: 1100px) {
+    .detail-grid {
+        grid-template-columns: 1fr;
+    }
+}

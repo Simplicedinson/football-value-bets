@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<section class="page-header">
+    <div>
+        <h1>Today's Matches</h1>
+        <p>List of today's matches with full-time 1X2 odds.</p>
+    </div>
+
+    <div class="header-badge">
+        {{ matches|length }} matches
+    </div>
+</section>
+
+<section class="toolbar">
+    <a class="sort-chip" href="/matches/today?sort=league&direction={{ next_direction }}">Sort by league</a>
+    <a class="sort-chip" href="/matches/today?sort=time&direction={{ next_direction }}">Sort by time</a>
+    <a class="sort-chip" href="/matches/today?sort=home_win&direction=desc">Highest home odd</a>
+    <a class="sort-chip" href="/matches/today?sort=draw&direction=desc">Highest draw odd</a>
+    <a class="sort-chip" href="/matches/today?sort=away_win&direction=desc">Highest away odd</a>
+    <a class="sort-chip" href="/matches/today?sort=highest_odd&direction=desc">Highest 1X2 odd</a>
+</section>
+
+<section class="card">
+    <table class="matches-table">
+        <thead>
+            <tr>
+                <th>
+                    <a href="/matches/today?sort=league&direction={{ next_direction }}">League</a>
+                </th>
+                <th>
+                    <a href="/matches/today?sort=time&direction={{ next_direction }}">Time</a>
+                </th>
+                <th>
+                    <a href="/matches/today?sort=home&direction={{ next_direction }}">Home</a>
+                </th>
+                <th>
+                    <a href="/matches/today?sort=away&direction={{ next_direction }}">Away</a>
+                </th>
+                <th class="odd-cell">
+                    <a href="/matches/today?sort=home_win&direction=desc">1</a>
+                </th>
+                <th class="odd-cell">
+                    <a href="/matches/today?sort=draw&direction=desc">X</a>
+                </th>
+                <th class="odd-cell">
+                    <a href="/matches/today?sort=away_win&direction=desc">2</a>
+                </th>
+                <th class="odd-cell">
+                    <a href="/matches/today?sort=highest_odd&direction=desc">Max</a>
+                </th>
+                <th class="odd-cell">
+                    <a href="/matches/today?sort=prices&direction=desc">Prices</a>
+                </th>
+                <th></th>
+            </tr>
+        </thead>
+
+        <tbody>
+            {% for match in matches %}
+                <tr>
+                    <td>{{ match.league_name }}</td>
+                    <td>{{ match.kickoff_time }}</td>
+                    <td class="team-name">{{ match.home_team }}</td>
+                    <td class="team-name">{{ match.away_team }}</td>
+
+                    <td class="odd-cell">
+                        {% if match.home_win %}
+                            {{ "%.2f"|format(match.home_win) }}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+
+                    <td class="odd-cell">
+                        {% if match.draw %}
+                            {{ "%.2f"|format(match.draw) }}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+
+                    <td class="odd-cell">
+                        {% if match.away_win %}
+                            {{ "%.2f"|format(match.away_win) }}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+
+                    <td class="odd-cell highlight">
+                        {% if match.highest_odd %}
+                            {{ "%.2f"|format(match.highest_odd) }}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+
+                    <td class="odd-cell">
+                        {{ match.price_count }}
+                    </td>
+
+                    <td>
+                        <a class="view-link" href="/matches/{{ match.fixture_id }}">
+                            View
+                        </a>
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</section>
+
+{% endblock %}

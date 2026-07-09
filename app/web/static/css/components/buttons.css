@@ -1,0 +1,40 @@
+.sort-chip,
+.view-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    font-weight: 900;
+    transition: 180ms ease;
+}
+
+.sort-chip {
+    color: var(--text);
+    background: linear-gradient(135deg, rgba(15, 23, 42, 0.95), rgba(30, 41, 59, 0.72));
+    border: 1px solid var(--border);
+    padding: 10px 14px;
+    border-radius: 999px;
+    font-size: 14px;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.06);
+}
+
+.sort-chip:hover {
+    border-color: var(--border-strong);
+    color: var(--accent-2);
+    box-shadow: var(--shadow-glow);
+    transform: translateY(-1px);
+}
+
+.view-link {
+    color: #03140a;
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    padding: 8px 12px;
+    border-radius: 999px;
+    font-size: 13px;
+    box-shadow: 0 0 22px rgba(34, 197, 94, 0.24);
+}
+
+.view-link:hover {
+    transform: translateY(-2px) scale(1.02);
+    box-shadow: 0 0 30px rgba(34, 197, 94, 0.42);
+}

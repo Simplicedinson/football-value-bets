@@ -1,0 +1,19 @@
+.header-badge {
+    background: linear-gradient(135deg, rgba(34, 197, 94, 0.20), rgba(20, 241, 149, 0.10));
+    border: 1px solid var(--border-strong);
+    color: var(--accent-2);
+    padding: 12px 20px;
+    border-radius: 999px;
+    font-weight: 950;
+    box-shadow: var(--shadow-glow);
+}
+
+.highlight {
+    color: var(--accent-2);
+    font-weight: 950;
+    text-shadow: 0 0 16px rgba(34, 197, 94, 0.45);
+}
+
+.muted {
+    color: var(--muted);
+}

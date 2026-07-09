@@ -1,0 +1,24 @@
+.sort-chip {
+    color: var(--text);
+    text-decoration: none;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    padding: 9px 12px;
+    border-radius: 999px;
+    font-size: 14px;
+}
+
+.sort-chip:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+}
+
+.view-link {
+    color: var(--accent);
+    text-decoration: none;
+    font-weight: 700;
+}
+
+.view-link:hover {
+    text-decoration: underline;
+}

@@ -1,0 +1,41 @@
+.matches-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.matches-table th,
+.matches-table td {
+    padding: 13px 14px;
+    border-bottom: 1px solid var(--border);
+    text-align: left;
+    font-size: 14px;
+}
+
+.matches-table th {
+    background: var(--sidebar-bg);
+    color: var(--muted);
+    font-size: 13px;
+    text-transform: uppercase;
+}
+
+.matches-table th a {
+    color: var(--muted);
+    text-decoration: none;
+}
+
+.matches-table th a:hover {
+    color: var(--accent);
+}
+
+.matches-table tr:hover {
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.odd-cell {
+    text-align: right !important;
+    font-variant-numeric: tabular-nums;
+}
+
+.team-name {
+    font-weight: 700;
+}
