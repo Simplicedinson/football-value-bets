@@ -10,3 +10,71 @@
 .matches-table td:nth-child(8) {
     font-size: 16px;
 }
+
+.empty-state {
+    padding: 34px;
+    text-align: center;
+    color: var(--muted);
+}
+
+.empty-state strong {
+    display: block;
+    color: var(--accent-2);
+    font-size: 20px;
+    margin-bottom: 10px;
+}
+
+.empty-state p {
+    margin: 0 0 14px 0;
+}
+
+.empty-state code {
+    display: inline-block;
+    background: rgba(2, 6, 23, 0.9);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 10px 14px;
+    color: var(--text);
+}
+
+.active-chip {
+    border-color: var(--accent-2);
+    color: var(--accent-2);
+    box-shadow: var(--shadow-glow);
+}
+
+.empty-state {
+    padding: 34px;
+    text-align: center;
+    color: var(--muted);
+}
+
+.empty-state strong {
+    display: block;
+    color: var(--accent-2);
+    font-size: 20px;
+    margin-bottom: 10px;
+}
+
+.empty-state p {
+    margin: 0;
+}
+
+.live-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 46px;
+    padding: 6px 10px;
+    border-radius: 999px;
+    background: rgba(239, 68, 68, 0.16);
+    color: #f87171;
+    font-weight: 900;
+    border: 1px solid rgba(239, 68, 68, 0.35);
+}
+
+.live-badge.halftime {
+    background: rgba(245, 158, 11, 0.16);
+    color: #fbbf24;
+    border-color: rgba(245, 158, 11, 0.35);
+}

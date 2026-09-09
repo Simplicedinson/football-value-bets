@@ -1,0 +1,178 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<section class="page-header">
+    <div>
+        <h1>Live Matches</h1>
+        <p>Current in-play football matches with live scoreboards and real-time 1X2 odds.</p>
+        <p class="live-sync-meta">
+            Auto refresh every {{ live_refresh.interval_seconds }} seconds
+            {% if live_refresh.last_error %}
+                <span id="live-sync-status">Refresh error: {{ live_refresh.last_error }}</span>
+            {% elif live_refresh.last_completed_at %}
+                <span id="live-sync-status">Live sync active</span>
+            {% else %}
+                <span id="live-sync-status">Waiting for first live sync</span>
+            {% endif %}
+        </p>
+    </div>
+
+    <div class="header-badge" id="live-count-badge">
+        {{ matches|length }} live
+    </div>
+</section>
+
+<section class="live-controls card">
+    <div class="live-controls-grid">
+        <label class="live-control-group live-search-group" for="live-search-input">
+            <span class="live-control-label">Quick Search</span>
+            <input
+                id="live-search-input"
+                class="live-control-input"
+                type="search"
+                placeholder="Search by team or league..."
+                autocomplete="off"
+            >
+        </label>
+
+        <label class="live-control-group" for="live-status-filter">
+            <span class="live-control-label">Status</span>
+            <select id="live-status-filter" class="live-control-select">
+                <option value="all">All statuses</option>
+                <option value="live">Live only</option>
+                <option value="halftime">Half-time only</option>
+            </select>
+        </label>
+
+        <label class="live-control-group" for="live-league-filter">
+            <span class="live-control-label">League</span>
+            <select id="live-league-filter" class="live-control-select">
+                <option value="all">All leagues</option>
+            </select>
+        </label>
+
+        <label class="live-control-group" for="live-sort-order">
+            <span class="live-control-label">Sort</span>
+            <select id="live-sort-order" class="live-control-select">
+                <option value="minute_desc">Minute descending</option>
+                <option value="minute_asc">Minute ascending</option>
+                <option value="league_asc">League A-Z</option>
+                <option value="league_desc">League Z-A</option>
+            </select>
+        </label>
+
+        <div class="live-control-group live-control-summary">
+            <span class="live-control-label">Visible</span>
+            <strong id="live-filter-summary">{{ matches|length }} / {{ matches|length }} matches</strong>
+        </div>
+    </div>
+</section>
+
+<section
+    class="live-dashboard"
+    id="live-dashboard"
+    data-live-api="/api/live-matches"
+    data-refresh-interval-ms="{{ live_refresh.interval_seconds * 1000 }}"
+>
+    {% if matches %}
+        <div class="live-grid" id="live-grid">
+            {% for match in matches %}
+                <article class="live-match-card {% if match.match_status == 'halftime' %}is-halftime{% else %}is-live{% endif %}">
+                    <div class="live-card-top">
+                        <div class="live-status-stack">
+                            {% if match.match_status == "halftime" %}
+                                <span class="live-status-pill halftime">HT</span>
+                                <span class="live-status-text">Half-time break</span>
+                            {% else %}
+                                <span class="live-status-pill">{{ match.live_minute or "LIVE" }}</span>
+                                <span class="live-status-text">In play now</span>
+                            {% endif %}
+                        </div>
+
+                        <div class="live-league-badge">
+                            {{ match.league_name }}
+                        </div>
+                    </div>
+
+                    <div class="live-scoreboard">
+                        <div class="live-team-panel home">
+                            <span class="live-team-label">Home</span>
+                            <h2 class="live-team-name">{{ match.home_team }}</h2>
+                        </div>
+
+                        <div class="live-score-core">
+                            <div class="live-score-shell">
+                                <span>{{ match.home_score if match.home_score is not none else "-" }}</span>
+                                <span class="live-score-divider">:</span>
+                                <span>{{ match.away_score if match.away_score is not none else "-" }}</span>
+                            </div>
+                            <span class="live-score-caption">Live scoreboard</span>
+                        </div>
+
+                        <div class="live-team-panel away">
+                            <span class="live-team-label">Away</span>
+                            <h2 class="live-team-name">{{ match.away_team }}</h2>
+                        </div>
+                    </div>
+
+                    <div class="live-odds-strip">
+                        <div class="live-odd-card">
+                            <span class="live-odd-label">Home</span>
+                            <strong class="live-odd-value">
+                                {% if match.home_win %}
+                                    {{ "%.2f"|format(match.home_win) }}
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </strong>
+                        </div>
+
+                        <div class="live-odd-card draw">
+                            <span class="live-odd-label">Draw</span>
+                            <strong class="live-odd-value">
+                                {% if match.draw %}
+                                    {{ "%.2f"|format(match.draw) }}
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </strong>
+                        </div>
+
+                        <div class="live-odd-card">
+                            <span class="live-odd-label">Away</span>
+                            <strong class="live-odd-value">
+                                {% if match.away_win %}
+                                    {{ "%.2f"|format(match.away_win) }}
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </strong>
+                        </div>
+                    </div>
+
+                    <div class="live-card-footer">
+                        <p class="live-card-note">Live 1X2 market snapshot</p>
+
+                        <a class="view-link live-view-link" href="/matches/{{ match.fixture_id }}">
+                            Open Match
+                        </a>
+                    </div>
+                </article>
+            {% endfor %}
+        </div>
+    {% else %}
+        <section class="card live-empty-card" id="live-empty-state">
+            <div class="empty-state">
+                <strong>No live matches found.</strong>
+                <p>Run the live scraper to update current in-play matches.</p>
+                <code>python -m app.scrapers.oddsportal_live_scraper</code>
+            </div>
+        </section>
+    {% endif %}
+</section>
+
+<script id="live-initial-matches" type="application/json">{{ initial_live_matches_json | safe }}</script>
+<script src="/static/js/live_matches.js" defer></script>
+
+{% endblock %}

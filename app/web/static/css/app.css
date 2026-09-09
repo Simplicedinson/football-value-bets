@@ -7,3 +7,534 @@
 @import url("./components/badges.css");
 @import url("./pages/today_matches.css");
 @import url("./pages/match_detail.css");
+
+
+/* =========================
+   LIVE MATCHES PAGE
+========================= */
+
+.live-dashboard {
+    position: relative;
+    transition: opacity 180ms ease;
+}
+
+.live-dashboard.is-refreshing {
+    opacity: 0.96;
+}
+
+.live-dashboard::before {
+    content: "";
+    position: absolute;
+    inset: -26px -10px auto;
+    height: 280px;
+    pointer-events: none;
+    background:
+        radial-gradient(circle at 8% 22%, rgba(20, 241, 149, 0.12), transparent 30%),
+        radial-gradient(circle at 90% 4%, rgba(56, 189, 248, 0.10), transparent 26%),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.02), transparent 40%);
+    filter: blur(12px);
+}
+
+.live-grid {
+    position: relative;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 24px;
+}
+
+.live-controls {
+    padding: 18px 20px;
+    margin-bottom: 22px;
+}
+
+.live-controls-grid {
+    display: grid;
+    grid-template-columns: minmax(280px, 1.5fr) repeat(4, minmax(0, 1fr));
+    gap: 14px;
+    align-items: end;
+}
+
+.live-control-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.live-control-label {
+    color: rgba(201, 214, 232, 0.78);
+    font-size: 12px;
+    font-weight: 900;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+}
+
+.live-control-input,
+.live-control-select {
+    width: 100%;
+    min-height: 50px;
+    padding: 0 16px;
+    border-radius: 16px;
+    border: 1px solid rgba(148, 163, 184, 0.16);
+    background: linear-gradient(180deg, rgba(9, 18, 31, 0.92), rgba(12, 23, 42, 0.84));
+    color: var(--text);
+    font-size: 15px;
+    outline: none;
+    color-scheme: dark;
+    transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+}
+
+.live-control-select option {
+    background: #0f172a;
+    color: #f8fafc;
+}
+
+.live-control-input::placeholder {
+    color: rgba(148, 163, 184, 0.72);
+}
+
+.live-control-input:focus,
+.live-control-select:focus {
+    border-color: rgba(20, 241, 149, 0.34);
+    box-shadow: 0 0 0 4px rgba(20, 241, 149, 0.08);
+}
+
+.live-control-summary {
+    justify-content: flex-end;
+    min-height: 50px;
+    padding: 12px 16px;
+    border-radius: 16px;
+    border: 1px solid rgba(148, 163, 184, 0.12);
+    background: linear-gradient(180deg, rgba(10, 18, 34, 0.88), rgba(12, 23, 42, 0.70));
+}
+
+.live-control-summary strong {
+    color: var(--accent-2);
+    font-size: 16px;
+    font-weight: 950;
+    letter-spacing: -0.03em;
+}
+
+.live-sync-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+    margin-top: 14px;
+    color: rgba(173, 186, 206, 0.82);
+    font-size: 13px;
+}
+
+.live-sync-meta span {
+    display: inline-flex;
+    align-items: center;
+    padding: 6px 10px;
+    border-radius: 999px;
+    background: rgba(15, 23, 42, 0.52);
+    border: 1px solid rgba(148, 163, 184, 0.12);
+    color: rgba(226, 232, 240, 0.78);
+}
+
+.live-match-card {
+    position: relative;
+    padding: 24px 24px 20px;
+    border-radius: 30px;
+    border: 1px solid rgba(60, 122, 116, 0.30);
+    background:
+        linear-gradient(180deg, rgba(11, 19, 36, 0.98), rgba(10, 18, 34, 0.92)),
+        radial-gradient(circle at top left, rgba(34, 197, 94, 0.11), transparent 32%),
+        radial-gradient(circle at bottom right, rgba(56, 189, 248, 0.06), transparent 28%);
+    box-shadow:
+        0 24px 54px rgba(0, 0, 0, 0.34),
+        inset 0 1px 0 rgba(255, 255, 255, 0.04),
+        inset 0 0 0 1px rgba(11, 182, 126, 0.04);
+    overflow: hidden;
+    transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
+}
+
+.live-match-card::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background:
+        linear-gradient(125deg, rgba(20, 241, 149, 0.08), transparent 34%),
+        linear-gradient(180deg, rgba(255, 255, 255, 0.015), transparent 28%);
+}
+
+.live-match-card::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 24px;
+    right: 24px;
+    height: 1px;
+    width: auto;
+    border-radius: 999px;
+    background: linear-gradient(90deg, rgba(20, 241, 149, 0.62), rgba(56, 189, 248, 0.08) 45%, transparent 90%);
+    pointer-events: none;
+}
+
+.live-match-card.is-live {
+    border-color: rgba(20, 241, 149, 0.24);
+}
+
+.live-match-card.is-halftime {
+    border-color: rgba(245, 158, 11, 0.28);
+}
+
+.live-match-card:hover {
+    transform: translateY(-3px);
+    border-color: rgba(20, 241, 149, 0.34);
+    box-shadow:
+        0 28px 62px rgba(0, 0, 0, 0.38),
+        0 0 0 1px rgba(20, 241, 149, 0.06),
+        inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.live-card-top,
+.live-scoreboard,
+.live-odds-strip,
+.live-card-footer {
+    position: relative;
+    z-index: 1;
+}
+
+.live-card-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.live-status-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.live-status-pill {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: fit-content;
+    min-width: 84px;
+    padding: 10px 16px;
+    border-radius: 999px;
+    background: linear-gradient(180deg, rgba(73, 26, 26, 0.92), rgba(54, 17, 17, 0.96));
+    color: #ff8f8f;
+    border: 1px solid rgba(255, 109, 109, 0.28);
+    box-shadow: 0 10px 22px rgba(79, 16, 16, 0.28);
+    font-weight: 950;
+    font-size: 14px;
+    letter-spacing: 0.06em;
+}
+
+.live-match-card.is-live .live-status-pill {
+    animation: live-badge-breathe 1.8s ease-in-out infinite;
+}
+
+.live-status-pill::before {
+    content: "";
+    width: 9px;
+    height: 9px;
+    border-radius: 999px;
+    background: currentColor;
+    box-shadow: 0 0 14px currentColor;
+    animation: live-pulse-dot 1.2s ease-in-out infinite;
+}
+
+.live-status-pill.halftime {
+    background: linear-gradient(180deg, rgba(94, 58, 12, 0.90), rgba(63, 38, 9, 0.96));
+    color: #ffd166;
+    border-color: rgba(245, 158, 11, 0.34);
+    box-shadow: 0 10px 22px rgba(104, 66, 9, 0.22);
+}
+
+.live-status-pill.halftime::before {
+    animation: none;
+}
+
+.live-status-text {
+    color: rgba(201, 214, 232, 0.74);
+    font-size: 12px;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+}
+
+.live-league-badge {
+    max-width: 48%;
+    padding: 11px 16px;
+    border-radius: 999px;
+    background: linear-gradient(180deg, rgba(12, 23, 42, 0.88), rgba(9, 18, 31, 0.90));
+    border: 1px solid rgba(148, 163, 184, 0.12);
+    color: rgba(241, 245, 249, 0.84);
+    font-size: 12px;
+    font-weight: 800;
+    line-height: 1.4;
+    text-align: right;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+}
+
+.live-scoreboard {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    gap: 16px;
+    align-items: center;
+    margin-bottom: 22px;
+}
+
+.live-team-panel {
+    padding: 18px 18px 18px;
+    border-radius: 22px;
+    background:
+        linear-gradient(180deg, rgba(16, 25, 46, 0.92), rgba(13, 22, 39, 0.72)),
+        radial-gradient(circle at top left, rgba(56, 189, 248, 0.06), transparent 28%);
+    border: 1px solid rgba(148, 163, 184, 0.10);
+    min-height: 118px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.02);
+}
+
+.live-team-panel.away {
+    text-align: right;
+}
+
+.live-team-label {
+    display: block;
+    margin-bottom: 10px;
+    color: var(--muted-2);
+    font-size: 12px;
+    font-weight: 900;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+}
+
+.live-team-name {
+    margin: 0;
+    color: var(--text);
+    font-size: 27px;
+    line-height: 1.02;
+    font-weight: 950;
+    letter-spacing: -0.05em;
+    text-wrap: balance;
+}
+
+.live-score-core {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+}
+
+.live-score-shell {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    min-width: 162px;
+    padding: 18px 28px;
+    border-radius: 26px;
+    background:
+        linear-gradient(180deg, rgba(120, 22, 22, 0.94), rgba(86, 12, 12, 0.98)),
+        radial-gradient(circle at top, rgba(255, 255, 255, 0.10), transparent 38%);
+    border: 1px solid rgba(255, 109, 109, 0.34);
+    box-shadow:
+        0 22px 38px rgba(91, 12, 12, 0.34),
+        inset 0 1px 0 rgba(255, 255, 255, 0.05),
+        0 0 36px rgba(239, 68, 68, 0.12);
+    color: #ffffff;
+    font-size: 48px;
+    font-weight: 950;
+    line-height: 1;
+    letter-spacing: -0.06em;
+    font-variant-numeric: tabular-nums;
+}
+
+.live-score-divider {
+    color: #ffb9b9;
+}
+
+.live-score-caption {
+    color: rgba(201, 214, 232, 0.68);
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+}
+
+.live-odds-strip {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 14px;
+    margin-bottom: 20px;
+}
+
+.live-odd-card {
+    padding: 14px 16px 16px;
+    border-radius: 20px;
+    background:
+        linear-gradient(180deg, rgba(25, 35, 52, 0.88), rgba(22, 31, 47, 0.66)),
+        radial-gradient(circle at top left, rgba(255, 255, 255, 0.02), transparent 32%);
+    border: 1px solid rgba(148, 163, 184, 0.12);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.02);
+    transition: transform 180ms ease, border-color 180ms ease, background 180ms ease;
+}
+
+.live-odd-card.draw {
+    background:
+        linear-gradient(180deg, rgba(12, 55, 87, 0.62), rgba(19, 33, 52, 0.76)),
+        radial-gradient(circle at top, rgba(56, 189, 248, 0.10), transparent 34%);
+    border-color: rgba(56, 189, 248, 0.28);
+}
+
+.live-odd-card:hover {
+    transform: translateY(-2px);
+    border-color: rgba(20, 241, 149, 0.20);
+}
+
+.live-odd-label {
+    display: block;
+    margin-bottom: 10px;
+    color: rgba(173, 186, 206, 0.74);
+    font-size: 12px;
+    font-weight: 900;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+}
+
+.live-odd-value {
+    display: block;
+    color: var(--text);
+    font-size: 30px;
+    font-weight: 950;
+    letter-spacing: -0.05em;
+    font-variant-numeric: tabular-nums;
+}
+
+.live-card-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+}
+
+.live-card-note {
+    margin: 0;
+    color: rgba(173, 186, 206, 0.78);
+    font-size: 14px;
+}
+
+.live-view-link {
+    min-width: 124px;
+    padding: 12px 18px;
+    font-size: 14px;
+    box-shadow: 0 10px 22px rgba(34, 197, 94, 0.24);
+}
+
+.live-empty-card {
+    padding: 18px;
+}
+
+@media (max-width: 1200px) {
+    .live-controls-grid {
+        grid-template-columns: 1fr 1fr 1fr;
+    }
+
+    .live-search-group {
+        grid-column: 1 / -1;
+    }
+
+    .live-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .live-team-name {
+        font-size: 24px;
+    }
+}
+
+@media (max-width: 860px) {
+    .live-controls-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .live-card-top,
+    .live-card-footer {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .live-league-badge {
+        max-width: 100%;
+        text-align: left;
+    }
+
+    .live-scoreboard {
+        grid-template-columns: 1fr;
+    }
+
+    .live-team-panel,
+    .live-team-panel.away {
+        text-align: left;
+        min-height: auto;
+    }
+
+    .live-score-core {
+        order: -1;
+        margin-bottom: 4px;
+    }
+
+    .live-odds-strip {
+        grid-template-columns: 1fr;
+    }
+
+    .live-score-shell {
+        min-width: 132px;
+        font-size: 38px;
+    }
+}
+
+@keyframes live-pulse-dot {
+    0% {
+        transform: scale(0.9);
+        opacity: 0.75;
+        box-shadow: 0 0 0 0 rgba(255, 143, 143, 0.38);
+    }
+
+    50% {
+        transform: scale(1.25);
+        opacity: 1;
+        box-shadow: 0 0 0 7px rgba(255, 143, 143, 0);
+    }
+
+    100% {
+        transform: scale(0.9);
+        opacity: 0.78;
+        box-shadow: 0 0 0 0 rgba(255, 143, 143, 0);
+    }
+}
+
+@keyframes live-badge-breathe {
+    0% {
+        transform: translateY(0);
+        box-shadow: 0 10px 22px rgba(79, 16, 16, 0.22);
+        border-color: rgba(255, 109, 109, 0.24);
+    }
+
+    50% {
+        transform: translateY(-1px) scale(1.015);
+        box-shadow: 0 14px 28px rgba(79, 16, 16, 0.30);
+        border-color: rgba(255, 109, 109, 0.38);
+    }
+
+    100% {
+        transform: translateY(0);
+        box-shadow: 0 10px 22px rgba(79, 16, 16, 0.22);
+        border-color: rgba(255, 109, 109, 0.24);
+    }
+}

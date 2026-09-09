@@ -4,8 +4,8 @@
 
 <section class="page-header">
     <div>
-        <h1>Today's Matches</h1>
-        <p>List of today's matches with full-time 1X2 odds.</p>
+        <h1>Match History</h1>
+        <p>Historical scraped matches grouped by date.</p>
     </div>
 
     <div class="header-badge">
@@ -14,45 +14,39 @@
 </section>
 
 <section class="toolbar">
-    <a class="sort-chip" href="/matches/today?sort=league&direction={{ next_direction }}">Sort by league</a>
-    <a class="sort-chip" href="/matches/today?sort=time&direction={{ next_direction }}">Sort by time</a>
-    <a class="sort-chip" href="/matches/today?sort=home_win&direction=desc">Highest home odd</a>
-    <a class="sort-chip" href="/matches/today?sort=draw&direction=desc">Highest draw odd</a>
-    <a class="sort-chip" href="/matches/today?sort=away_win&direction=desc">Highest away odd</a>
-    <a class="sort-chip" href="/matches/today?sort=highest_odd&direction=desc">Highest 1X2 odd</a>
+    {% for item in available_dates %}
+        <a
+            class="sort-chip {% if selected_date == item.match_date|string %}active-chip{% endif %}"
+            href="/matches/history?date={{ item.match_date }}"
+        >
+            {{ item.match_date }} · {{ item.match_count }}
+        </a>
+    {% endfor %}
+</section>
+
+<section class="toolbar">
+    <a class="sort-chip" href="/matches/history?date={{ selected_date }}&sort=league&direction={{ next_direction }}">Sort by league</a>
+    <a class="sort-chip" href="/matches/history?date={{ selected_date }}&sort=time&direction={{ next_direction }}">Sort by time</a>
+    <a class="sort-chip" href="/matches/history?date={{ selected_date }}&sort=home_win&direction=desc">Highest home odd</a>
+    <a class="sort-chip" href="/matches/history?date={{ selected_date }}&sort=draw&direction=desc">Highest draw odd</a>
+    <a class="sort-chip" href="/matches/history?date={{ selected_date }}&sort=away_win&direction=desc">Highest away odd</a>
+    <a class="sort-chip" href="/matches/history?date={{ selected_date }}&sort=highest_odd&direction=desc">Highest 1X2 odd</a>
 </section>
 
 <section class="card">
     <table class="matches-table">
         <thead>
             <tr>
-                <th>
-                    <a href="/matches/today?sort=league&direction={{ next_direction }}">League</a>
-                </th>
-                <th>
-                    <a href="/matches/today?sort=time&direction={{ next_direction }}">Time</a>
-                </th>
-                <th>
-                    <a href="/matches/today?sort=home&direction={{ next_direction }}">Home</a>
-                </th>
-                <th>
-                    <a href="/matches/today?sort=away&direction={{ next_direction }}">Away</a>
-                </th>
-                <th class="odd-cell">
-                    <a href="/matches/today?sort=home_win&direction=desc">1</a>
-                </th>
-                <th class="odd-cell">
-                    <a href="/matches/today?sort=draw&direction=desc">X</a>
-                </th>
-                <th class="odd-cell">
-                    <a href="/matches/today?sort=away_win&direction=desc">2</a>
-                </th>
-                <th class="odd-cell">
-                    <a href="/matches/today?sort=highest_odd&direction=desc">Max</a>
-                </th>
-                <th class="odd-cell">
-                    <a href="/matches/today?sort=prices&direction=desc">Prices</a>
-                </th>
+                <th>League</th>
+                <th>Date</th>
+                <th>Time</th>
+                <th>Home</th>
+                <th>Away</th>
+                <th class="odd-cell">1</th>
+                <th class="odd-cell">X</th>
+                <th class="odd-cell">2</th>
+                <th class="odd-cell">Max</th>
+                <th class="odd-cell">Prices</th>
                 <th></th>
             </tr>
         </thead>
@@ -62,6 +56,7 @@
                 {% for match in matches %}
                     <tr>
                         <td>{{ match.league_name }}</td>
+                        <td>{{ match.match_date }}</td>
                         <td>{{ match.kickoff_time }}</td>
                         <td class="team-name">{{ match.home_team }}</td>
                         <td class="team-name">{{ match.away_team }}</td>
@@ -98,9 +93,7 @@
                             {% endif %}
                         </td>
 
-                        <td class="odd-cell">
-                            {{ match.price_count }}
-                        </td>
+                        <td class="odd-cell">{{ match.price_count }}</td>
 
                         <td>
                             <a class="view-link" href="/matches/{{ match.fixture_id }}">
@@ -111,19 +104,15 @@
                 {% endfor %}
             {% else %}
                 <tr>
-                    <td colspan="10">
+                    <td colspan="11">
                         <div class="empty-state">
-                            <strong>No matches scraped for today.</strong>
-                            <p>
-                                Run the OddsPortal scraper to load today's matches.
-                            </p>
-                            <code>python -m app.scrapers.oddsportal_scraper</code>
+                            <strong>No historical matches found.</strong>
+                            <p>No scraped matches are available before today.</p>
                         </div>
                     </td>
                 </tr>
             {% endif %}
         </tbody>
-
     </table>
 </section>
 

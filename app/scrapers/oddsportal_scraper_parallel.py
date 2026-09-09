@@ -17,76 +17,83 @@ Important:
 """
 
 from __future__ import annotations
-
 import asyncio
 import json
+import os
 import re
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any, Optional
 from urllib.parse import urlparse
-import time
-
-import os
 from zoneinfo import ZoneInfo
-from datetime import date, datetime, timedelta, timezone
-
 
 from playwright.async_api import async_playwright, TimeoutError as PlaywrightTimeoutError
+
+
 from dotenv import load_dotenv
 load_dotenv()
 
-# TARGET_URL = "https://www.oddsportal.com/matches/football/"
+
+# Date-driven target URL.
+# Example:
+#   ODDSPORTAL_TARGET_DATE=20260711
+#   -> https://www.oddsportal.com/matches/football/20260711/
+#
+# Legacy fallback:
+#   ODDSPORTAL_SCRAPE_DAY=today
+#   ODDSPORTAL_SCRAPE_DAY=tomorrow
 
 
-SCRAPE_DAY = os.getenv("ODDSPORTAL_SCRAPE_DAY", "today").strip().lower()
-
-print(f"ODDSPORTAL_SCRAPE_DAY: {SCRAPE_DAY}")
-
-TARGET_URLS = {
-    "today": "https://www.oddsportal.com/matches/football/",
-    "tomorrow": "https://www.oddsportal.com/matches/football/tomorrow/",
-}
-
-
-def get_target_url() -> str:
+def parse_target_match_date() -> date:
     """
-    Return the OddsPortal URL for the selected scrape day.
+    Parse the target match date for OddsPortal.
+
+    Priority:
+        1. ODDSPORTAL_TARGET_DATE in YYYYMMDD or YYYY-MM-DD format.
+        2. ODDSPORTAL_SCRAPE_DAY=today/tomorrow.
+        3. Today in Europe/Berlin.
     """
-    if SCRAPE_DAY not in TARGET_URLS:
+    raw_target_date = os.getenv("ODDSPORTAL_TARGET_DATE", "").strip()
+
+    if raw_target_date:
+        for date_format in ("%Y%m%d", "%Y-%m-%d"):
+            try:
+                return datetime.strptime(raw_target_date, date_format).date()
+            except ValueError:
+                continue
+
         raise ValueError(
-            f"Invalid ODDSPORTAL_SCRAPE_DAY: {SCRAPE_DAY}. "
-            "Allowed values: today, tomorrow."
+            "Invalid ODDSPORTAL_TARGET_DATE. Use YYYYMMDD or YYYY-MM-DD."
         )
 
-    return TARGET_URLS[SCRAPE_DAY]
-
-
-def get_match_date() -> str:
-    """
-    Return the real match date for the selected scrape day.
-    """
+    scrape_day = os.getenv("ODDSPORTAL_SCRAPE_DAY", "today").strip().lower()
     berlin_today = datetime.now(ZoneInfo("Europe/Berlin")).date()
 
-    if SCRAPE_DAY == "tomorrow":
-        return (berlin_today + timedelta(days=1)).isoformat()
+    if scrape_day == "today":
+        return berlin_today
 
-    return berlin_today.isoformat()
+    if scrape_day == "tomorrow":
+        return berlin_today + timedelta(days=1)
+
+    raise ValueError(
+        f"Invalid ODDSPORTAL_SCRAPE_DAY: {scrape_day}. "
+        "Allowed values: today, tomorrow."
+    )
 
 
-TARGET_URL = get_target_url()
-MATCH_DATE = get_match_date()
-
-
+TARGET_MATCH_DATE = parse_target_match_date()
+TARGET_DATE_SLUG = TARGET_MATCH_DATE.strftime("%Y%m%d")
+TARGET_URL = f"https://www.oddsportal.com/matches/football/{TARGET_DATE_SLUG}/"
+MATCH_DATE = TARGET_MATCH_DATE.isoformat()
 
 print(f"\n\nScraping OddsPortal football matches for: {TARGET_URL} ({MATCH_DATE})\n\n")
 
-date = datetime.now(timezone.utc).strftime("%Y-%m-%d")
 
 OUTPUT_DIR = Path("data/raw/oddsportal")
-HTML_OUTPUT = OUTPUT_DIR / "football_matches_page.html"
-JSON_OUTPUT = OUTPUT_DIR / f"football_matches_by_league_simple_{date}.json"
+HTML_OUTPUT = OUTPUT_DIR / f"football_matches_page_{TARGET_DATE_SLUG}.html"
+JSON_OUTPUT = OUTPUT_DIR / f"football_matches_by_league_{TARGET_DATE_SLUG}.json"
+LEGACY_JSON_OUTPUT = OUTPUT_DIR / "football_matches_by_league_simple.json"
 
 # We keep only one bookmaker for markets like 1X2 and BTTS.
 # For Over/Under, the visible summary line is used because it directly exposes
@@ -97,7 +104,18 @@ PREFERRED_BOOKMAKER = "Bet365.de"
 # Set to None when you want to scrape all matches.
 MAX_MATCHES_TO_SCRAPE_ODDS: Optional[int] = None
 
-REQUEST_DELAY_SECONDS = 1.5
+# Concurrency settings.
+# Playwright works best with async parallel pages instead of real Python threads.
+# Increase MAX_PARALLEL_MATCHES carefully: too high can create timeouts and heavy CPU/RAM usage.
+MAX_PARALLEL_MATCHES = int(os.getenv("ODDSPORTAL_MAX_PARALLEL_MATCHES", "32"))
+
+# Small delay between market pages inside the same match.
+# Set to 0.0 for maximum speed, but 0.2-0.5 is more stable.
+REQUEST_DELAY_SECONDS = float(os.getenv("ODDSPORTAL_REQUEST_DELAY_SECONDS", "0.3"))
+
+# Rendering waits. OddsPortal is JavaScript-heavy, so do not put these too low.
+MARKET_RENDER_WAIT_MS = int(os.getenv("ODDSPORTAL_MARKET_RENDER_WAIT_MS", "3000"))
+SCROLL_RENDER_WAIT_MS = int(os.getenv("ODDSPORTAL_SCROLL_RENDER_WAIT_MS", "400"))
 
 
 ODDS_MARKET_SUFFIXES = [
@@ -398,6 +416,22 @@ async def accept_cookies_if_visible(page) -> None:
             continue
 
 
+async def block_unnecessary_resources(route) -> None:
+    """
+    Block heavy resources that are not needed for text extraction.
+
+    This speeds up scraping without changing the scraping logic.
+    JavaScript and documents are still loaded because OddsPortal needs them.
+    """
+    blocked_resource_types = {"image", "media", "font"}
+
+    if route.request.resource_type in blocked_resource_types:
+        await route.abort()
+        return
+
+    await route.continue_()
+
+
 async def prepare_market_page(page, market_url: str) -> None:
     """
     Open a market page and force a fresh render.
@@ -416,13 +450,13 @@ async def prepare_market_page(page, market_url: str) -> None:
     await accept_cookies_if_visible(page)
 
     # Give the JavaScript app time to render.
-    await page.wait_for_timeout(3500)
+    await page.wait_for_timeout(MARKET_RENDER_WAIT_MS)
 
     # Trigger lazy-loaded rows if needed.
     await page.mouse.wheel(0, 1200)
-    await page.wait_for_timeout(700)
+    await page.wait_for_timeout(SCROLL_RENDER_WAIT_MS)
     await page.mouse.wheel(0, -1200)
-    await page.wait_for_timeout(700)
+    await page.wait_for_timeout(SCROLL_RENDER_WAIT_MS)
 
 
 async def extract_visible_text_blocks(page) -> list[str]:
@@ -527,6 +561,25 @@ def build_values_from_bookmaker_row(
     return None
 
 
+
+def row_matches_expected_market(row_text: str, market_key: str) -> bool:
+    """
+    Validate that a bookmaker row belongs to the expected market.
+
+    This avoids storing wrong BTTS data when OddsPortal is still showing a 1X2
+    table after a hash-based market navigation.
+    """
+    normalized_text = clean_text(row_text).lower()
+
+    if market_key == "1x2":
+        return bool(re.search(r"\b1\s+x\s+2\b", normalized_text))
+
+    if market_key == "both_teams_to_score":
+        return "yes no" in normalized_text
+
+    return True
+
+
 def parse_single_bookmaker_market(
     text_blocks: list[str],
     market_key: str,
@@ -542,7 +595,9 @@ def parse_single_bookmaker_market(
     candidate_rows = [
         text
         for text in text_blocks
-        if "CLAIM BONUS" in text and not is_previous_matches_section(text)
+        if "CLAIM BONUS" in text
+        and not is_previous_matches_section(text)
+        and row_matches_expected_market(text, market_key)
     ]
 
     preferred_rows = [
@@ -722,6 +777,108 @@ async def scrape_all_odds_for_match(page, match_url: str) -> dict[str, Any]:
     return odds
 
 
+def collect_matches_to_scrape(league_sections: list[LeagueSection]) -> list[FootballMatch]:
+    """
+    Return matches that should receive detailed odds scraping.
+
+    The original league/match objects are returned, so workers can update
+    match.odds directly while preserving the final JSON structure.
+    """
+    matches_to_scrape: list[FootballMatch] = []
+
+    for section in league_sections:
+        for match in section.matches:
+            if (
+                MAX_MATCHES_TO_SCRAPE_ODDS is not None
+                and len(matches_to_scrape) >= MAX_MATCHES_TO_SCRAPE_ODDS
+            ):
+                return matches_to_scrape
+
+            matches_to_scrape.append(match)
+
+    return matches_to_scrape
+
+
+async def scrape_match_with_own_page(
+    context,
+    semaphore: asyncio.Semaphore,
+    match: FootballMatch,
+    match_index: int,
+    total_matches: int,
+) -> None:
+    """
+    Scrape one match using its own Playwright page.
+
+    Running several of these tasks in parallel is the main speed improvement.
+    """
+    async with semaphore:
+        page = await context.new_page()
+
+        try:
+            print(
+                f"[{match_index}/{total_matches}] Scraping odds: "
+                f"{match.kickoff_time} | {match.home_team} vs {match.away_team}"
+            )
+
+            match.odds = await scrape_all_odds_for_match(
+                page,
+                match.match_url,
+            )
+
+        except Exception as error:
+            print(
+                f"[{match_index}/{total_matches}] Could not scrape match: "
+                f"{match.home_team} vs {match.away_team}"
+            )
+            print(f"Error: {error}")
+            match.odds = {}
+
+        finally:
+            await page.close()
+
+
+async def scrape_odds_for_matches_in_parallel(
+    context,
+    league_sections: list[LeagueSection],
+) -> None:
+    """
+    Scrape match odds concurrently with a controlled number of pages.
+    """
+    matches_to_scrape = collect_matches_to_scrape(league_sections)
+    total_matches = len(matches_to_scrape)
+
+    if total_matches == 0:
+        print("No matches selected for detailed odds scraping.")
+        return
+
+    parallel_matches = max(1, min(MAX_PARALLEL_MATCHES, total_matches))
+
+    print("=" * 80)
+    print("Parallel odds scraping")
+    print("=" * 80)
+    print(f"Matches selected: {total_matches}")
+    print(f"Parallel pages: {parallel_matches}")
+    print(f"Markets per match: {len(ODDS_MARKET_SUFFIXES)}")
+    print("=" * 80)
+
+    semaphore = asyncio.Semaphore(parallel_matches)
+
+    tasks = [
+        asyncio.create_task(
+            scrape_match_with_own_page(
+                context=context,
+                semaphore=semaphore,
+                match=match,
+                match_index=index,
+                total_matches=total_matches,
+            )
+        )
+        for index, match in enumerate(matches_to_scrape, start=1)
+    ]
+
+    await asyncio.gather(*tasks)
+
+
 async def scrape_matches_by_league() -> list[LeagueSection]:
     """
     Render OddsPortal football page, group matches by league,
@@ -744,6 +901,8 @@ async def scrape_matches_by_league() -> list[LeagueSection]:
                 "Chrome/120.0.0.0 Safari/537.36"
             ),
         )
+
+        await context.route("**/*", block_unnecessary_resources)
 
         page = await context.new_page()
 
@@ -847,43 +1006,10 @@ async def scrape_matches_by_league() -> list[LeagueSection]:
                 section for section in league_sections if section.matches
             ]
 
-            detail_page = await context.new_page()
-            scraped_detailed_matches = 0
-
-            for section in league_sections:
-                for match in section.matches:
-                    if (
-                        MAX_MATCHES_TO_SCRAPE_ODDS is not None
-                        and scraped_detailed_matches >= MAX_MATCHES_TO_SCRAPE_ODDS
-                    ):
-                        break
-
-                    print(
-                        "Scraping odds:",
-                        match.kickoff_time,
-                        match.home_team,
-                        "vs",
-                        match.away_team,
-                    )
-
-                    match.odds = await scrape_all_odds_for_match(
-                        detail_page,
-                        match.match_url,
-                    )
-
-                    scraped_detailed_matches += 1
-
-                    await detail_page.wait_for_timeout(
-                        int(REQUEST_DELAY_SECONDS * 1000)
-                    )
-
-                if (
-                    MAX_MATCHES_TO_SCRAPE_ODDS is not None
-                    and scraped_detailed_matches >= MAX_MATCHES_TO_SCRAPE_ODDS
-                ):
-                    break
-
-            await detail_page.close()
+            await scrape_odds_for_matches_in_parallel(
+                context=context,
+                league_sections=league_sections,
+            )
 
             return league_sections
 
@@ -905,8 +1031,16 @@ def write_output_json(league_sections: list[LeagueSection]) -> None:
         if section.matches
     ]
 
+    json_payload = json.dumps(output_data, indent=2, ensure_ascii=False)
+
     JSON_OUTPUT.write_text(
-        json.dumps(output_data, indent=2, ensure_ascii=False),
+        json_payload,
+        encoding="utf-8",
+    )
+
+    # Compatibility output for older loaders.
+    LEGACY_JSON_OUTPUT.write_text(
+        json_payload,
         encoding="utf-8",
     )
 
@@ -926,11 +1060,16 @@ def print_summary(league_sections: list[LeagueSection]) -> None:
     print("=" * 80)
     print("OddsPortal simplified football odds")
     print("=" * 80)
+    print(f"Target URL: {TARGET_URL}")
+    print(f"Match date: {MATCH_DATE}")
     print(f"Preferred bookmaker: {PREFERRED_BOOKMAKER}")
+    print(f"Parallel pages: {MAX_PARALLEL_MATCHES}")
+    print(f"Request delay seconds: {REQUEST_DELAY_SECONDS}")
     print(f"Total leagues found: {len(league_sections)}")
     print(f"Total matches found: {total_matches}")
     print(f"Matches with scraped odds: {matches_with_odds}")
     print(f"JSON saved to: {JSON_OUTPUT}")
+    print(f"Legacy JSON also saved to: {LEGACY_JSON_OUTPUT}")
     print("=" * 80)
 
     for section in league_sections:
@@ -942,7 +1081,7 @@ def print_summary(league_sections: list[LeagueSection]) -> None:
             market_keys = ", ".join(match.odds.keys()) if match.odds else "no odds"
 
             print(
-                f"{match.kickoff_time} | "
+                f"{match.match_date} {match.kickoff_time} | "
                 f"{match.home_team} vs {match.away_team} | "
                 f"{market_keys}"
             )
@@ -965,3 +1104,4 @@ if __name__ == "__main__":
 
     print("=" * 80)
     print("Football Value Bets - OddsPortal Simplified Scraper finished at ", datetime.now(timezone.utc))
+
